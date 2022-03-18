@@ -16,6 +16,7 @@ export interface DictionaryParams {
   remark: string;
   current: number;
   pageSize: number;
+  total: number;
 }
 
 export interface DictionaryRequest {

@@ -10,7 +10,6 @@ const emit = defineEmits<{
 
 const { collapsed, toggle } = useCollapsed(true);
 const formModel = reactive<Partial<DictionaryParams>>({});
-
 const form = ref<FormInstance>();
 
 const handleSubmit = () => emit('onSearch', formModel);

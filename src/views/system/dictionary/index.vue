@@ -1,75 +1,104 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
-import dayjs from 'dayjs';
-import { useRequest } from 'vue-request';
-import PageContainer from '@/components/page-container/index.vue';
-import SearchForm from './components/search-form.vue';
-import OperatorButton from './components/operator-button.vue';
-import MutationDrawer from './components/mutation-drawer.vue';
-import { getColumns } from './constants';
-import * as DictionaryService from './service';
-import { DictionaryParams } from './data.d';
+  import { ref } from 'vue';
+  import { useRequest } from 'vue-request';
+  import { Message, Modal } from '@arco-design/web-vue';
+  import PageContainer from '@/components/page-container/index.vue';
+  import useState from '@/hooks/useState';
+  import useTimeFormat from '@/hooks/useTimeFormat';
+  import SearchForm from './components/search-form.vue';
+  import OperatorButton from './components/operator-button.vue';
+  import MutationDrawer from './components/mutation-drawer.vue';
+  import { Columns } from './columns';
+  import { paginationUtil } from '@/utils/pagination';
+  import * as DictionaryService from './service';
+  import {
+    DictionaryParams,
+    DictionaryRecord,
+    DictionaryRequest,
+  } from './data.d';
 
-const formParams = reactive<Partial<DictionaryParams>>({});
-const {
-  data: tableData,
-  loading: tableLoading,
-  refresh,
-} = useRequest(() => DictionaryService.query(formParams));
-const onSearch = (params: Partial<DictionaryParams>) => {
-  formParams.name = params.name;
-  formParams.code = params.code;
-  formParams.remark = params.remark;
-  formParams.status = params.status;
-};
-const columns = getColumns();
-const onCreate = () => {};
-const onDelete = () => {};
-const onModify = () => {};
-const onPageChange = (current: number) => (formParams.current = current);
-watch(formParams, refresh);
+  const { state: formParams, setState: setFormParams } = useState<
+    Partial<DictionaryParams>
+  >({});
+  const { state: currentRecord, setState: setCurrentRecord } = useState<
+    Partial<DictionaryRecord>
+  >({});
+  const mutationRef = ref();
+  // 请求分页
+  const {
+    data: tableData,
+    loading: tableLoading,
+    reload: reloadQuery,
+  } = useRequest(() => DictionaryService.query(formParams.value), {
+    refreshDeps: [formParams],
+  });
+  // 搜索
+  const onSearch = (params: Partial<DictionaryParams>) =>
+    setFormParams({ ...params });
+  // 新建
+  const onCreate = () => {
+    setCurrentRecord({ sort: 1000 });
+    mutationRef.value?.openDrawer();
+  };
+  // 删除
+  const { run: deleteMutation } = useRequest(
+    (req: Partial<DictionaryRequest>) => DictionaryService.remove(req),
+    {
+      manual: true,
+      onBefore: () => Message.loading(`正在删除数据中...`),
+      onSuccess: () => {
+        Message.clear();
+        Message.success(`删除成功!`);
+      },
+      onError: () => {
+        Message.clear();
+        Message.error(`删除失败!`);
+      },
+      onAfter: () => {
+        // 解决分页最后一行删除返回上一页
+        const current = paginationUtil(
+          tableData.value?.current,
+          tableData.value?.pageSize,
+          tableData.value?.total
+        );
+        // 保留原有请求参数，覆盖current
+        // 触发formParams更新，重新请求
+        setFormParams({ ...formParams.value, current });
+      },
+    }
+  );
+  const onDelete = (record: Partial<DictionaryRecord>) => {
+    Modal.confirm({
+      title: '确认删除当前所选字典?',
+      content: `删除后，${record.name}将被清空，且无法恢复`,
+      okButtonProps: { status: 'danger' },
+      onOk: () => deleteMutation(record),
+    });
+  };
+  // 修改
+  const onModify = (record: Partial<DictionaryRecord>) => {
+    setCurrentRecord(record);
+    mutationRef.value?.openDrawer();
+  };
+  // 分页
+  const onPageChange = (current: number) => {
+    setFormParams({ ...formParams.value, current });
+  };
 </script>
 
 <template>
   <PageContainer>
     <a-card :bordered="false">
-      <SearchForm @onSearch="(params) => onSearch(params)" />
-      <OperatorButton>
-        <template #leftButtons>
-          <a-space>
-            <a-button type="primary" @click="onCreate">
-              <template #icon>
-                <icon-plus />
-              </template>
-              <template #default>新建</template>
-            </a-button>
-            <a-button status="danger" @click="onDelete">
-              <template #icon>
-                <icon-minus />
-              </template>
-              <template #default>删除</template>
-            </a-button>
-          </a-space>
-        </template>
-        <template #rightButtons>
-          <a-button>
-            <template #icon>
-              <icon-download />
-            </template>
-            <template #default>下载</template>
-          </a-button>
-        </template>
-      </OperatorButton>
+      <SearchForm @onSearch="onSearch" />
+      <OperatorButton @onCreate="onCreate" />
       <a-table
         row-key="id"
-        :columns="columns"
+        :columns="Columns"
         :data="tableData?.list"
         :loading="tableLoading"
-        @page-change="onPageChange"
+        @pageChange="onPageChange"
         :pagination="{
-          sizeCanChange: true,
           showTotal: true,
-          pageSizeChangeResetCurrent: true,
           pageSize: tableData?.pageSize,
           current: tableData?.current,
           total: tableData?.total,
@@ -77,18 +106,18 @@ watch(formParams, refresh);
       >
         <template #status="{ record }"></template>
         <template #updated_at="{ record }">
-          {{ dayjs.unix(record.updated_at).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ useTimeFormat(record.updated_at) }}
         </template>
         <template #operations="{ record }">
           <a-space :size="0">
-            <a-button type="text" size="small" @click="onModify">
+            <a-button type="text" size="small" @click="onModify(record)">
               <template #default>修改</template>
             </a-button>
             <a-button
               type="text"
               size="small"
               status="danger"
-              @click="onDelete"
+              @click="onDelete(record)"
             >
               <template #default>删除</template>
             </a-button>
@@ -96,16 +125,20 @@ watch(formParams, refresh);
         </template>
       </a-table>
     </a-card>
-    <MutationDrawer />
+    <MutationDrawer
+      ref="mutationRef"
+      :record="currentRecord"
+      @onMutations="reloadQuery"
+    />
   </PageContainer>
 </template>
 
 <style scoped lang="less">
-:deep(.arco-table-th) {
-  &:last-child {
-    .arco-table-th-item-title {
-      margin-left: 16px;
+  :deep(.arco-table-th) {
+    &:last-child {
+      .arco-table-th-item-title {
+        margin-left: 16px;
+      }
     }
   }
-}
 </style>
