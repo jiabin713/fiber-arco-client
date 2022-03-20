@@ -1,6 +1,4 @@
-import { TableColumn } from '@arco-design/web-vue/es/table/interface';
-
-export const Columns: TableColumn[] = [
+export const Columns = [
   {
     title: '字典名称',
     dataIndex: 'name',
@@ -8,11 +6,6 @@ export const Columns: TableColumn[] = [
   {
     title: '字典编码',
     dataIndex: 'code',
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    slotName: 'status',
   },
   {
     title: '备注',

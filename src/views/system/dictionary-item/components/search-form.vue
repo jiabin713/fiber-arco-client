@@ -2,14 +2,15 @@
   import useCollapsed from '@/hooks/useCollapsed';
   import { FormInstance } from '@arco-design/web-vue/es/form';
   import { reactive, ref } from 'vue';
-  import { DictionaryParams } from '../data.d';
+  import { DictionaryItemParams } from '../data.d';
+  import SystemStatusSelect from '@/components/system-status-select/index.vue';
 
   const emit = defineEmits<{
-    (e: 'onSearch', value: Partial<DictionaryParams>): void;
+    (e: 'onSearch', value: Partial<DictionaryItemParams>): void;
   }>();
 
   const { collapsed, toggle } = useCollapsed(true);
-  const formModel = reactive<Partial<DictionaryParams>>({});
+  const formModel = reactive<Partial<DictionaryItemParams>>({});
   const form = ref<FormInstance>();
 
   const handleSubmit = () => emit('onSearch', formModel);
@@ -28,7 +29,7 @@
       :wrapper-col-props="{ span: 18 }"
       label-align="left"
     >
-      <a-grid :cols="3" :colGap="12" :rowGap="16" :collapsed="collapsed">
+      <a-grid :cols="2" :colGap="12" :rowGap="16" :collapsed="collapsed">
         <a-grid-item>
           <a-form-item field="name" label="名称">
             <a-input
@@ -48,12 +49,8 @@
           </a-form-item>
         </a-grid-item>
         <a-grid-item>
-          <a-form-item field="remark" label="备注">
-            <a-input
-              v-model="formModel.remark"
-              allowclear
-              placeholder="请输入备注"
-            />
+          <a-form-item field="status" label="状态">
+            <SystemStatusSelect v-model="formModel.status" />
           </a-form-item>
         </a-grid-item>
         <a-grid-item :span="1" suffix style="text-align: right">

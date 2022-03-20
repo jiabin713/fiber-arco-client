@@ -4,15 +4,11 @@ import {
   DictionaryRequest,
 } from './data.d';
 
-import { PageResponse } from '@/types/global';
+import { PageResponse } from '@/global/data.d';
 import qs from 'query-string';
 import request from '@/utils/axios/instance';
 
 const URL = '/system/dictionary';
-
-export enum ServerStateKeysEnum {
-  query = 'dictionary-query',
-}
 
 export const query = async (
   params: Partial<DictionaryParams>

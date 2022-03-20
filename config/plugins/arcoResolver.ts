@@ -15,7 +15,7 @@ export default function configArcoResolverPlugin() {
     deep: false,
     resolvers: [
       ArcoResolver({
-        importStyle: 'less',
+        // importStyle: 'less',
         resolveIcons: true,
       }),
     ],

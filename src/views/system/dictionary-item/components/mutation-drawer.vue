@@ -1,16 +1,17 @@
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { FormInstance } from '@arco-design/web-vue/es/form';
-  import Rules from './rules';
-  import { DictionaryRecord, DictionaryRequest } from '../data.d';
-  import useState from '@/hooks/useState';
-  import * as DictionaryService from '../service';
   import { useRequest } from 'vue-request';
   import { Message } from '@arco-design/web-vue';
+  import { FormInstance } from '@arco-design/web-vue/es/form';
+  import Rules from './rules';
+  import { DictionaryItemRecord, DictionaryItemRequest } from '../data.d';
+  import useState from '@/hooks/useState';
+  import * as DictionaryItemService from '../service';
   import SystemStatusSelect from '@/components/system-status-select/index.vue';
+
   // Props
   const props = defineProps<{
-    record: Partial<DictionaryRecord>;
+    record: Partial<DictionaryItemRecord>;
   }>();
   // Emit
   const emit = defineEmits<{
@@ -18,7 +19,7 @@
   }>();
 
   const { state: formModel, setState: setFormModel } = useState<
-    Partial<DictionaryRecord>
+    Partial<DictionaryItemRecord>
   >({});
   const { state: title, setState: setTitle } = useState<string>('');
   const { state: visible, setState: setVisible } = useState<boolean>(false);
@@ -32,17 +33,17 @@
     setFormModel(props.record);
     setTitle('新建');
     if (!!props.record.id) {
-      setTitle(`更新 ${props.record.name}`);
+      setTitle(`更新 ${props.record.label} `);
     }
   };
   // 关闭后
   const afterClose = () => setFormModel({});
 
   const { run: mutations, loading } = useRequest(
-    (req: Partial<DictionaryRequest>) => {
+    (req: Partial<DictionaryItemRequest>) => {
       const updateOrAdd = req.id
-        ? DictionaryService.update
-        : DictionaryService.create;
+        ? DictionaryItemService.update
+        : DictionaryItemService.create;
       return updateOrAdd(req);
     },
     {
@@ -87,13 +88,13 @@
   >
     <a-card :bordered="false">
       <a-form ref="formRef" :model="formModel" layout="vertical" :rules="Rules">
-        <a-form-item label="字典名称" field="name">
-          <a-input v-model="formModel.name" placeholder="请输入名称" />
+        <a-form-item label="选项标" field="label">
+          <a-input v-model="formModel.label" placeholder="请输入名称" />
         </a-form-item>
-        <a-form-item label="字典编码" field="code">
-          <a-input v-model="formModel.code" placeholder="请输入编码" />
+        <a-form-item label="选项值" field="value">
+          <a-input v-model="formModel.value" placeholder="请输入编码" />
         </a-form-item>
-        <a-form-item label="状态" field="status">
+        <a-form-item label="状态" field="status" initialValue="active">
           <SystemStatusSelect v-model="formModel.status" />
         </a-form-item>
         <a-form-item label="排序" field="sort" initialValue="{1000}">

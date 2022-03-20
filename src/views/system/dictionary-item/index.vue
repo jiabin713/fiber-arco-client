@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import { useRequest } from 'vue-request';
   import { Message, Modal } from '@arco-design/web-vue';
-  import PageContainer from '@/components/page-container/index.vue';
   import useState from '@/hooks/useState';
   import useTimeFormat from '@/hooks/useTimeFormat';
   import SearchForm from './components/search-form.vue';
@@ -10,40 +9,52 @@
   import MutationDrawer from './components/mutation-drawer.vue';
   import { Columns } from './columns';
   import { calCurrent } from '@/utils/pagination';
-  import * as DictionaryService from './service';
+  import * as DictionaryItemService from './service';
   import {
-    DictionaryParams,
-    DictionaryRecord,
-    DictionaryRequest,
+    DictionaryItemParams,
+    DictionaryItemRecord,
+    DictionaryItemRequest,
   } from './data.d';
-  import DictionaryItem from '../dictionary-item/index.vue';
-
+  import { DictionaryRecord } from '../dictionary/data.d';
+  import SystemStatusTag from '@/components/system-status-tag/index.vue';
+  // Props
+  const props = defineProps<{
+    record: Partial<DictionaryRecord>;
+  }>();
+  const { state: visible, setState: setVisible } = useState(false);
   const { state: formParams, setState: setFormParams } = useState<
-    Partial<DictionaryParams>
+    Partial<DictionaryItemParams>
   >({});
   const { state: currentRecord, setState: setCurrentRecord } = useState<
-    Partial<DictionaryRecord>
+    Partial<DictionaryItemRecord>
   >({});
   const mutationRef = ref();
   // 请求分页
   const {
     data: tableData,
     loading: tableLoading,
-    reload: reloadQuery,
-  } = useRequest(() => DictionaryService.query(formParams.value), {
-    refreshDeps: [formParams],
+    refresh: refreshQuery,
+  } = useRequest(() => DictionaryItemService.query(formParams.value), {
+    manual: true,
   });
+  watch(formParams, refreshQuery);
   // 搜索
-  const onSearch = (params: Partial<DictionaryParams>) =>
-    setFormParams({ ...params });
+  const onSearch = (params: Partial<DictionaryItemParams>) =>
+    setFormParams({
+      ...params,
+      dictionary_code: formParams.value.dictionary_code,
+    });
   // 新建
   const onCreate = () => {
-    setCurrentRecord({ sort: 1000 });
+    setCurrentRecord({
+      sort: 1000,
+      dictionary_code: props.record.code,
+    });
     mutationRef.value?.openDrawer();
   };
   // 删除
   const { run: deleteMutation } = useRequest(
-    (req: Partial<DictionaryRequest>) => DictionaryService.remove(req),
+    (req: Partial<DictionaryItemRequest>) => DictionaryItemService.remove(req),
     {
       manual: true,
       onBefore: () => Message.loading(`正在删除数据中...`),
@@ -68,16 +79,16 @@
       },
     }
   );
-  const onDelete = (record: Partial<DictionaryRecord>) => {
-    Modal.warning({
+  const onDelete = (record: Partial<DictionaryItemRecord>) => {
+    Modal.confirm({
       title: '确认删除当前所选字典?',
-      content: `删除后，${record.name} 将被清空，且无法恢复`,
+      content: `删除后，${record.label}将被清空，且无法恢复`,
       okButtonProps: { status: 'danger' },
       onOk: () => deleteMutation(record),
     });
   };
   // 修改
-  const onModify = (record: Partial<DictionaryRecord>) => {
+  const onModify = (record: Partial<DictionaryItemRecord>) => {
     setCurrentRecord(record);
     mutationRef.value?.openDrawer();
   };
@@ -86,16 +97,25 @@
     setFormParams({ ...formParams.value, current });
   };
 
-  // 查看 字典选项表格
-  const dictionaryItemRef = ref();
-  const onView = (record: Partial<DictionaryRecord>) => {
-    setCurrentRecord(record);
-    dictionaryItemRef.value?.openDrawer();
-  };
+  // drawer 操作
+  const openDrawer = () => setVisible(true);
+  const closeDrawer = () => setVisible(false);
+  // 开启后
+  const afterOpen = () => setFormParams({ dictionary_code: props.record.code });
+
+  defineExpose({ openDrawer });
 </script>
 
 <template>
-  <PageContainer>
+  <a-drawer
+    :visible="visible"
+    @open="afterOpen"
+    @cancel="closeDrawer"
+    width="45%"
+    :unmountOnClose="true"
+    :title="props.record.name"
+    :footer="false"
+  >
     <a-card :bordered="false">
       <SearchForm @onSearch="onSearch" />
       <OperatorButton @onCreate="onCreate" />
@@ -112,36 +132,35 @@
           total: tableData?.total,
         }"
       >
+        <template #status="{ record }">
+          <SystemStatusTag :code="record.code" :status="record.status" />
+        </template>
         <template #updated_at="{ record }">
           {{ useTimeFormat(record.updated_at) }}
         </template>
         <template #operations="{ record }">
-          <a-button-group>
-            <a-button type="text" size="small" @click="onView(record)">
-              <template #default>查看</template>
+          <a-space :size="0">
+            <a-button type="text" size="small" @click="onModify(record)">
+              <template #default>修改</template>
             </a-button>
-            <a-dropdown trigger="hover">
-              <a-button type="text" size="small"><icon-down /></a-button>
-              <template #content>
-                <a-doption @click="onModify(record)">
-                  <template #default>修改</template>
-                </a-doption>
-                <a-doption @click="onDelete(record)">
-                  <a-typography-text type="danger">删除</a-typography-text>
-                </a-doption>
-              </template>
-            </a-dropdown>
-          </a-button-group>
+            <a-button
+              type="text"
+              size="small"
+              status="danger"
+              @click="onDelete(record)"
+            >
+              <template #default>删除</template>
+            </a-button>
+          </a-space>
         </template>
       </a-table>
     </a-card>
     <MutationDrawer
       ref="mutationRef"
       :record="currentRecord"
-      @onMutations="reloadQuery"
+      @onMutations="refreshQuery"
     />
-    <DictionaryItem ref="dictionaryItemRef" :record="currentRecord" />
-  </PageContainer>
+  </a-drawer>
 </template>
 
 <style scoped lang="less">

@@ -1,4 +1,4 @@
-export const paginationUtil = (
+export const calCurrent = (
   current: number = 1,
   pageSize: number = 10,
   total: number = 10
