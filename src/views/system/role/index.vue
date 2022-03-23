@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { ref } from 'vue';
   import { useRequest } from 'vue-request';
   import { Message, Modal } from '@arco-design/web-vue';
+  import PageContainer from '@/components/page-container/index.vue';
   import useState from '@/hooks/useState';
   import useTimeFormat from '@/hooks/useTimeFormat';
   import SearchForm from './components/search-form.vue';
@@ -9,54 +10,37 @@
   import MutationDrawer from './components/mutation-drawer.vue';
   import { Columns } from './columns';
   import { calCurrent } from '@/utils/pagination';
-  import * as DictionaryItemService from './service';
-  import {
-    DictionaryItemParams,
-    DictionaryItemRecord,
-    DictionaryItemRequest,
-  } from './data.d';
-  import { DictionaryRecord } from '../dictionary/data.d';
+  import * as RoleService from './service';
+  import { RoleParams, RoleRecord, RoleRequest } from './data.d';
   import StatusTag from '@/components/status-tag/index.vue';
   import { QueryStatusCode } from '@/global/constants';
 
-  // Props
-  const props = defineProps<{
-    record: Partial<DictionaryRecord>;
-  }>();
-  const { state: visible, setState: setVisible } = useState(false);
   const { state: formParams, setState: setFormParams } = useState<
-    Partial<DictionaryItemParams>
+    Partial<RoleParams>
   >({});
   const { state: currentRecord, setState: setCurrentRecord } = useState<
-    Partial<DictionaryItemRecord>
+    Partial<RoleRecord>
   >({});
   const mutationRef = ref();
   // 请求分页
   const {
     data: tableData,
     loading: tableLoading,
-    refresh: refreshQuery,
-  } = useRequest(() => DictionaryItemService.query(formParams.value), {
-    manual: true,
+    reload: reloadQuery,
+  } = useRequest(() => RoleService.query(formParams.value), {
+    refreshDeps: [formParams],
   });
-  watch(formParams, refreshQuery);
   // 搜索
-  const onSearch = (params: Partial<DictionaryItemParams>) =>
-    setFormParams({
-      ...params,
-      dictionary_code: formParams.value.dictionary_code,
-    });
+  const onSearch = (params: Partial<RoleParams>) =>
+    setFormParams({ ...params });
   // 新建
   const onCreate = () => {
-    setCurrentRecord({
-      sort: 1000,
-      dictionary_code: props.record.code,
-    });
+    setCurrentRecord({ sort: 1000 });
     mutationRef.value?.openDrawer();
   };
   // 删除
   const { run: deleteMutation } = useRequest(
-    (req: Partial<DictionaryItemRequest>) => DictionaryItemService.remove(req),
+    (req: Partial<RoleRequest>) => RoleService.remove(req),
     {
       manual: true,
       onBefore: () => Message.loading(`正在删除数据中...`),
@@ -81,16 +65,16 @@
       },
     }
   );
-  const onDelete = (record: Partial<DictionaryItemRecord>) => {
-    Modal.confirm({
-      title: '确认删除当前所选选项?',
-      content: `删除后，${record.label}将被清空，且无法恢复`,
+  const onDelete = (record: Partial<RoleRecord>) => {
+    Modal.warning({
+      title: '确认删除当前所选角色?',
+      content: `删除后，${record.name} 将被清空，且无法恢复`,
       okButtonProps: { status: 'danger' },
       onOk: () => deleteMutation(record),
     });
   };
   // 修改
-  const onModify = (record: Partial<DictionaryItemRecord>) => {
+  const onModify = (record: Partial<RoleRecord>) => {
     setCurrentRecord(record);
     mutationRef.value?.openDrawer();
   };
@@ -98,26 +82,10 @@
   const onPageChange = (current: number) => {
     setFormParams({ ...formParams.value, current });
   };
-
-  // drawer 操作
-  const openDrawer = () => setVisible(true);
-  const closeDrawer = () => setVisible(false);
-  // 开启后
-  const afterOpen = () => setFormParams({ dictionary_code: props.record.code });
-
-  defineExpose({ openDrawer });
 </script>
 
 <template>
-  <a-drawer
-    :visible="visible"
-    @open="afterOpen"
-    @cancel="closeDrawer"
-    width="45%"
-    :unmountOnClose="true"
-    :title="props.record.name"
-    :footer="false"
-  >
+  <PageContainer>
     <a-card :bordered="false">
       <SearchForm @onSearch="onSearch" />
       <OperatorButton @onCreate="onCreate" />
@@ -163,9 +131,9 @@
     <MutationDrawer
       ref="mutationRef"
       :record="currentRecord"
-      @onMutations="refreshQuery"
+      @onMutations="reloadQuery"
     />
-  </a-drawer>
+  </PageContainer>
 </template>
 
 <style scoped lang="less">

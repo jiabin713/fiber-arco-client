@@ -2,15 +2,14 @@
   import useCollapsed from '@/hooks/useCollapsed';
   import { FormInstance } from '@arco-design/web-vue/es/form';
   import { reactive, ref } from 'vue';
-  import { DictionaryItemParams } from '../data.d';
-  import StatusSelect from '@/components/status-select/index.vue';
-  import { QueryStatusCode } from '@/global/constants';
+  import { PositionParams } from '../data.d';
+
   const emit = defineEmits<{
-    (e: 'onSearch', value: Partial<DictionaryItemParams>): void;
+    (e: 'onSearch', value: Partial<PositionParams>): void;
   }>();
 
   const { collapsed, toggle } = useCollapsed(true);
-  const formModel = reactive<Partial<DictionaryItemParams>>({});
+  const formModel = reactive<Partial<PositionParams>>({});
   const form = ref<FormInstance>();
 
   const handleSubmit = () => emit('onSearch', formModel);
@@ -29,30 +28,31 @@
       :wrapper-col-props="{ span: 18 }"
       label-align="left"
     >
-      <a-grid :cols="2" :colGap="12" :rowGap="16" :collapsed="collapsed">
+      <a-grid :cols="3" :colGap="12" :rowGap="16" :collapsed="collapsed">
         <a-grid-item>
-          <a-form-item field="label" label="名称">
+          <a-form-item field="name" label="角色名称">
             <a-input
-              v-model="formModel.label"
+              v-model="formModel.name"
               allowclear
               placeholder="请输入名称"
             />
           </a-form-item>
         </a-grid-item>
         <a-grid-item>
-          <a-form-item field="value" label="编码">
+          <a-form-item field="code" label="角色编码">
             <a-input
-              v-model="formModel.value"
+              v-model="formModel.code"
               allowclear
               placeholder="请输入编码"
             />
           </a-form-item>
         </a-grid-item>
         <a-grid-item>
-          <a-form-item field="status" label="状态">
-            <StatusSelect
-              v-model="formModel.status"
-              :queryCode="QueryStatusCode.system_status"
+          <a-form-item field="remark" label="备注">
+            <a-input
+              v-model="formModel.remark"
+              allowclear
+              placeholder="请输入备注"
             />
           </a-form-item>
         </a-grid-item>

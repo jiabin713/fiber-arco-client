@@ -1,17 +1,20 @@
+import { buildTree } from '@/utils/buildTree';
 <script setup lang="ts">
   import { ref } from 'vue';
   import { useRequest } from 'vue-request';
   import { Message } from '@arco-design/web-vue';
   import { FormInstance } from '@arco-design/web-vue/es/form';
-  import Rules from './rules';
-  import { DictionaryItemRecord, DictionaryItemRequest } from '../data.d';
   import useState from '@/hooks/useState';
-  import * as DictionaryItemService from '../service';
   import StatusSelect from '@/components/status-select/index.vue';
+  import Rules from './rules';
+  import { OrganizationRecord, OrganizationRequest } from '../data.d';
+  import * as OrganizationService from '../service';
   import { QueryStatusCode } from '@/global/constants';
+  import { buildTree } from '@/utils/buildTree';
+
   // Props
   const props = defineProps<{
-    record: Partial<DictionaryItemRecord>;
+    record: Partial<OrganizationRecord>;
   }>();
   // Emit
   const emit = defineEmits<{
@@ -19,7 +22,7 @@
   }>();
 
   const { state: formModel, setState: setFormModel } = useState<
-    Partial<DictionaryItemRecord>
+    Partial<OrganizationRecord>
   >({});
   const { state: title, setState: setTitle } = useState<string>('');
   const { state: visible, setState: setVisible } = useState<boolean>(false);
@@ -28,22 +31,35 @@
   const openDrawer = () => setVisible(true);
   const closeDrawer = () => setVisible(false);
 
+  const {
+    data: selectTreeData,
+    loading: selectTreeLoading,
+    run: querySelectTree,
+  } = useRequest(() => OrganizationService.queryTree({ id: props.record.id }), {
+    manual: true,
+
+    formatResult: (data) => {
+      return data.concat({ id: 'root', name: '顶级' } as OrganizationRecord);
+    },
+  });
+
   // 开启后
   const afterOpen = () => {
+    querySelectTree();
     setFormModel(props.record);
     setTitle('新建');
     if (!!props.record.id) {
-      setTitle(`更新 ${props.record.label} `);
+      setTitle(`更新 ${props.record.name} `);
     }
   };
   // 关闭后
   const afterClose = () => setFormModel({});
 
   const { run: mutations, loading } = useRequest(
-    (req: Partial<DictionaryItemRequest>) => {
+    (req: Partial<OrganizationRequest>) => {
       const updateOrAdd = req.id
-        ? DictionaryItemService.update
-        : DictionaryItemService.create;
+        ? OrganizationService.update
+        : OrganizationService.create;
       return updateOrAdd(req);
     },
     {
@@ -88,13 +104,27 @@
   >
     <a-card :bordered="false">
       <a-form ref="formRef" :model="formModel" layout="vertical" :rules="Rules">
-        <a-form-item label="选项名称" field="label">
-          <a-input v-model="formModel.label" placeholder="请输入名称" />
+        <a-form-item label="上级组织" field="parent_id">
+          <a-tree-select
+            v-model="formModel.parent_id"
+            :data="selectTreeData"
+            :loading="selectTreeLoading"
+            :fieldNames="{
+              key: 'id',
+              value: 'id',
+              title: 'name',
+            }"
+            allowClear
+            placeholder="请选择上级组织"
+          ></a-tree-select>
         </a-form-item>
-        <a-form-item label="选项数据" field="value">
-          <a-input v-model="formModel.value" placeholder="请输入数据" />
+        <a-form-item label="组织名称" field="name">
+          <a-input v-model="formModel.name" placeholder="请输入名称" />
         </a-form-item>
-        <a-form-item label="类型" field="status">
+        <a-form-item label="组织编码" field="code">
+          <a-input v-model="formModel.code" placeholder="请输入数据" />
+        </a-form-item>
+        <a-form-item label="状态" field="status" initialValue="active">
           <StatusSelect
             v-model="formModel.status"
             :queryCode="QueryStatusCode.system_status"

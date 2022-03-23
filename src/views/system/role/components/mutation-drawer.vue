@@ -3,15 +3,16 @@
   import { useRequest } from 'vue-request';
   import { Message } from '@arco-design/web-vue';
   import { FormInstance } from '@arco-design/web-vue/es/form';
-  import Rules from './rules';
-  import { DictionaryItemRecord, DictionaryItemRequest } from '../data.d';
-  import useState from '@/hooks/useState';
-  import * as DictionaryItemService from '../service';
   import StatusSelect from '@/components/status-select/index.vue';
   import { QueryStatusCode } from '@/global/constants';
+  import Rules from './rules';
+  import { RoleRecord, RoleRequest } from '../data.d';
+  import useState from '@/hooks/useState';
+  import * as RoleService from '../service';
+
   // Props
   const props = defineProps<{
-    record: Partial<DictionaryItemRecord>;
+    record: Partial<RoleRecord>;
   }>();
   // Emit
   const emit = defineEmits<{
@@ -19,7 +20,7 @@
   }>();
 
   const { state: formModel, setState: setFormModel } = useState<
-    Partial<DictionaryItemRecord>
+    Partial<RoleRecord>
   >({});
   const { state: title, setState: setTitle } = useState<string>('');
   const { state: visible, setState: setVisible } = useState<boolean>(false);
@@ -33,17 +34,15 @@
     setFormModel(props.record);
     setTitle('新建');
     if (!!props.record.id) {
-      setTitle(`更新 ${props.record.label} `);
+      setTitle(`更新 ${props.record.name}`);
     }
   };
   // 关闭后
   const afterClose = () => setFormModel({});
 
   const { run: mutations, loading } = useRequest(
-    (req: Partial<DictionaryItemRequest>) => {
-      const updateOrAdd = req.id
-        ? DictionaryItemService.update
-        : DictionaryItemService.create;
+    (req: Partial<RoleRequest>) => {
+      const updateOrAdd = req.id ? RoleService.update : RoleService.create;
       return updateOrAdd(req);
     },
     {
@@ -88,13 +87,13 @@
   >
     <a-card :bordered="false">
       <a-form ref="formRef" :model="formModel" layout="vertical" :rules="Rules">
-        <a-form-item label="选项名称" field="label">
-          <a-input v-model="formModel.label" placeholder="请输入名称" />
+        <a-form-item label="角色名称" field="name">
+          <a-input v-model="formModel.name" placeholder="请输入名称" />
         </a-form-item>
-        <a-form-item label="选项数据" field="value">
-          <a-input v-model="formModel.value" placeholder="请输入数据" />
+        <a-form-item label="角色编码" field="code">
+          <a-input v-model="formModel.code" placeholder="请输入编码" />
         </a-form-item>
-        <a-form-item label="类型" field="status">
+        <a-form-item label="状态" field="status">
           <StatusSelect
             v-model="formModel.status"
             :queryCode="QueryStatusCode.system_status"

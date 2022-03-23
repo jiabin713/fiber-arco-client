@@ -1,8 +1,11 @@
 import * as DictionaryItemService from '@/views/system/dictionary-item/service';
 
+import { computed, ref } from 'vue';
+import { set, useAsyncState } from '@vueuse/core';
+
+import { DictionaryItemRecord } from '@/views/system/dictionary-item/data.d';
 import { SystemStatus } from '@/global/constants';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
 
 // 字典获取
 // 进入 需要字典数据的时候，读取dictionaryList
@@ -13,26 +16,36 @@ import { ref } from 'vue';
 
 export const useDictionaryStore = defineStore('dictionary', () => {
   // 设定基础状态
-  const dictionaryList = ref(SystemStatus);
+  const dictionaryList = ref<DictionaryItemRecord[]>(
+    []
+    // SystemStatus as DictionaryItemRecord[]
+  );
 
-  const selectOptions = (dictionary_code: string) => {
+  const selectOptions = (dictionary_code: string = 'system_status') => {
     const items = dictionaryList.value.filter(
       (item) => item.dictionary_code == dictionary_code
     );
     if (items.length == 0) {
       getDictionaryItemsByType(dictionary_code);
-      return dictionaryList.value.filter(
+
+      const res = dictionaryList.value.filter(
         (item) => item.dictionary_code == dictionary_code
       );
-    }
+      console.log(res);
 
+      return res;
+    }
+    console.log(dictionaryList.value);
     return items;
   };
 
   const getDictionaryItemsByType = async (type: string) => {
+    console.log('我去后台了', type);
     const data = await DictionaryItemService.queryItems(type);
-    dictionaryList.value = dictionaryList.value.concat(data);
+
+    set(dictionaryList, [...dictionaryList.value, ...data]);
   };
+
   return { selectOptions };
 });
 

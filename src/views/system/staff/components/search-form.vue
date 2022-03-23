@@ -2,15 +2,14 @@
   import useCollapsed from '@/hooks/useCollapsed';
   import { FormInstance } from '@arco-design/web-vue/es/form';
   import { reactive, ref } from 'vue';
-  import { DictionaryItemParams } from '../data.d';
-  import StatusSelect from '@/components/status-select/index.vue';
-  import { QueryStatusCode } from '@/global/constants';
+  import { StaffParams } from '../data.d';
+
   const emit = defineEmits<{
-    (e: 'onSearch', value: Partial<DictionaryItemParams>): void;
+    (e: 'onSearch', value: Partial<StaffParams>): void;
   }>();
 
   const { collapsed, toggle } = useCollapsed(true);
-  const formModel = reactive<Partial<DictionaryItemParams>>({});
+  const formModel = reactive<Partial<StaffParams>>({});
   const form = ref<FormInstance>();
 
   const handleSubmit = () => emit('onSearch', formModel);
@@ -31,28 +30,47 @@
     >
       <a-grid :cols="2" :colGap="12" :rowGap="16" :collapsed="collapsed">
         <a-grid-item>
-          <a-form-item field="label" label="名称">
+          <a-form-item field="username" label="用户名称">
             <a-input
-              v-model="formModel.label"
+              v-model="formModel.username"
               allowclear
               placeholder="请输入名称"
             />
           </a-form-item>
         </a-grid-item>
         <a-grid-item>
-          <a-form-item field="value" label="编码">
+          <a-form-item field="name" label="用户姓名">
             <a-input
-              v-model="formModel.value"
+              v-model="formModel.name"
               allowclear
-              placeholder="请输入编码"
+              placeholder="请输入姓名"
+            />
+          </a-form-item>
+        </a-grid-item>
+        <!-- <a-grid-item>
+          <a-form-item field="email" label="电子邮件">
+            <a-input
+              v-model="formModel.email"
+              allowclear
+              placeholder="请输入邮件"
             />
           </a-form-item>
         </a-grid-item>
         <a-grid-item>
-          <a-form-item field="status" label="状态">
-            <StatusSelect
-              v-model="formModel.status"
-              :queryCode="QueryStatusCode.system_status"
+          <a-form-item field="mobile" label="电话号码">
+            <a-input
+              v-model="formModel.mobile"
+              allowclear
+              placeholder="请输入电话号码"
+            />
+          </a-form-item>
+        </a-grid-item> -->
+        <a-grid-item>
+          <a-form-item field="remark" label="备注">
+            <a-input
+              v-model="formModel.remark"
+              allowclear
+              placeholder="请输入备注"
             />
           </a-form-item>
         </a-grid-item>

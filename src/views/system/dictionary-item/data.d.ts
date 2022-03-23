@@ -2,6 +2,7 @@ export interface DictionaryItemRecord {
   id: string;
   label: string;
   value: string;
+  color: string;
   dictionary_code: string;
   status: string;
   sort: number;
@@ -25,6 +26,7 @@ export interface DictionaryItemRequest {
   id: string;
   label: string;
   value: string;
+  color: string;
   dictionary_code: string;
   status: string;
   sort: number;

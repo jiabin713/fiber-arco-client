@@ -1,62 +1,50 @@
-<script setup lang="ts">
-  import { ref, watch } from 'vue';
+let<script setup lang="ts">
+  import { ref } from 'vue';
   import { useRequest } from 'vue-request';
   import { Message, Modal } from '@arco-design/web-vue';
+  import PageContainer from '@/components/page-container/index.vue';
   import useState from '@/hooks/useState';
   import useTimeFormat from '@/hooks/useTimeFormat';
   import SearchForm from './components/search-form.vue';
   import OperatorButton from './components/operator-button.vue';
   import MutationDrawer from './components/mutation-drawer.vue';
   import { Columns } from './columns';
-  import { calCurrent } from '@/utils/pagination';
-  import * as DictionaryItemService from './service';
+  import * as OrganizationService from './service';
   import {
-    DictionaryItemParams,
-    DictionaryItemRecord,
-    DictionaryItemRequest,
+    OrganizationParams,
+    OrganizationRecord,
+    OrganizationRequest,
   } from './data.d';
-  import { DictionaryRecord } from '../dictionary/data.d';
   import StatusTag from '@/components/status-tag/index.vue';
   import { QueryStatusCode } from '@/global/constants';
 
-  // Props
-  const props = defineProps<{
-    record: Partial<DictionaryRecord>;
-  }>();
-  const { state: visible, setState: setVisible } = useState(false);
   const { state: formParams, setState: setFormParams } = useState<
-    Partial<DictionaryItemParams>
+    Partial<OrganizationParams>
   >({});
   const { state: currentRecord, setState: setCurrentRecord } = useState<
-    Partial<DictionaryItemRecord>
+    Partial<OrganizationRecord>
   >({});
   const mutationRef = ref();
-  // 请求分页
+  // 请求
   const {
     data: tableData,
     loading: tableLoading,
-    refresh: refreshQuery,
-  } = useRequest(() => DictionaryItemService.query(formParams.value), {
-    manual: true,
+    reload: reloadQuery,
+  } = useRequest(() => OrganizationService.queryTree(formParams.value), {
+    refreshDeps: [formParams],
   });
-  watch(formParams, refreshQuery);
+
   // 搜索
-  const onSearch = (params: Partial<DictionaryItemParams>) =>
-    setFormParams({
-      ...params,
-      dictionary_code: formParams.value.dictionary_code,
-    });
+  const onSearch = (params: Partial<OrganizationParams>) =>
+    setFormParams({ ...params });
   // 新建
   const onCreate = () => {
-    setCurrentRecord({
-      sort: 1000,
-      dictionary_code: props.record.code,
-    });
+    setCurrentRecord({ sort: 1000 });
     mutationRef.value?.openDrawer();
   };
   // 删除
   const { run: deleteMutation } = useRequest(
-    (req: Partial<DictionaryItemRequest>) => DictionaryItemService.remove(req),
+    (req: Partial<OrganizationRequest>) => OrganizationService.remove(req),
     {
       manual: true,
       onBefore: () => Message.loading(`正在删除数据中...`),
@@ -69,69 +57,39 @@
         Message.error(`删除失败!`);
       },
       onAfter: () => {
-        // 解决分页最后一行删除返回上一页
-        const current = calCurrent(
-          tableData.value?.current,
-          tableData.value?.pageSize,
-          tableData.value?.total
-        );
-        // 保留原有请求参数，覆盖current
-        // 触发formParams更新，重新请求
-        setFormParams({ ...formParams.value, current });
+        setFormParams({ ...formParams.value });
       },
     }
   );
-  const onDelete = (record: Partial<DictionaryItemRecord>) => {
-    Modal.confirm({
-      title: '确认删除当前所选选项?',
-      content: `删除后，${record.label}将被清空，且无法恢复`,
+  const onDelete = (record: Partial<OrganizationRecord>) => {
+    Modal.warning({
+      title: '确认删除当前所选组织?',
+      content: `删除后，${record.name} 将被清空，且无法恢复`,
       okButtonProps: { status: 'danger' },
       onOk: () => deleteMutation(record),
     });
   };
   // 修改
-  const onModify = (record: Partial<DictionaryItemRecord>) => {
+  const onModify = (record: Partial<OrganizationRecord>) => {
     setCurrentRecord(record);
     mutationRef.value?.openDrawer();
   };
-  // 分页
-  const onPageChange = (current: number) => {
-    setFormParams({ ...formParams.value, current });
-  };
-
-  // drawer 操作
-  const openDrawer = () => setVisible(true);
-  const closeDrawer = () => setVisible(false);
-  // 开启后
-  const afterOpen = () => setFormParams({ dictionary_code: props.record.code });
-
-  defineExpose({ openDrawer });
 </script>
 
 <template>
-  <a-drawer
-    :visible="visible"
-    @open="afterOpen"
-    @cancel="closeDrawer"
-    width="45%"
-    :unmountOnClose="true"
-    :title="props.record.name"
-    :footer="false"
-  >
+  <PageContainer>
     <a-card :bordered="false">
       <SearchForm @onSearch="onSearch" />
       <OperatorButton @onCreate="onCreate" />
       <a-table
+        v-if="tableData"
         row-key="id"
         :columns="Columns"
-        :data="tableData?.list"
+        :data="tableData"
         :loading="tableLoading"
-        @pageChange="onPageChange"
-        :pagination="{
-          showTotal: true,
-          pageSize: tableData?.pageSize,
-          current: tableData?.current,
-          total: tableData?.total,
+        :pagination="false"
+        :expandable="{
+          defaultExpandAllRows: true,
         }"
       >
         <template #status="{ record }">
@@ -163,9 +121,9 @@
     <MutationDrawer
       ref="mutationRef"
       :record="currentRecord"
-      @onMutations="refreshQuery"
+      @onMutations="reloadQuery"
     />
-  </a-drawer>
+  </PageContainer>
 </template>
 
 <style scoped lang="less">

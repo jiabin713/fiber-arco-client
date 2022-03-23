@@ -1,16 +1,30 @@
 export const Columns = [
   {
-    title: '选项名称',
-    dataIndex: 'label',
+    title: '用户名称',
+    dataIndex: 'username',
   },
   {
-    title: '选项数据',
-    dataIndex: 'value',
+    title: '用户姓名',
+    dataIndex: 'name',
+  },
+  {
+    title: '电子邮箱',
+    dataIndex: 'email',
+  },
+  {
+    title: '电话号码',
+    dataIndex: 'mobile',
+  },
+  {
+    title: '性别',
+    dataIndex: 'gender',
+    slotName: 'gender',
   },
   {
     title: '状态',
     dataIndex: 'status',
     slotName: 'status',
+    width: '10%',
   },
   // {
   //   title: '备注',

@@ -7,7 +7,9 @@
   import * as DictionaryService from '../service';
   import { useRequest } from 'vue-request';
   import { Message } from '@arco-design/web-vue';
-  import SystemStatusSelect from '@/components/system-status-select/index.vue';
+  import StatusSelect from '@/components/status-select/index.vue';
+  import { QueryStatusCode } from '@/global/constants';
+
   // Props
   const props = defineProps<{
     record: Partial<DictionaryRecord>;
@@ -94,7 +96,10 @@
           <a-input v-model="formModel.code" placeholder="请输入编码" />
         </a-form-item>
         <a-form-item label="状态" field="status">
-          <SystemStatusSelect v-model="formModel.status" />
+          <StatusSelect
+            v-model="formModel.status"
+            :queryCode="QueryStatusCode.system_status"
+          />
         </a-form-item>
         <a-form-item label="排序" field="sort" initialValue="{1000}">
           <a-input-number
