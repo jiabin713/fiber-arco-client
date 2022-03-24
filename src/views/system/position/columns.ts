@@ -1,10 +1,10 @@
 export const Columns = [
   {
-    title: '职位名称',
+    title: '岗位名称',
     dataIndex: 'name',
   },
   {
-    title: '职位编码',
+    title: '岗位编码',
     dataIndex: 'code',
   },
   {

@@ -4,7 +4,6 @@
   import { Message, Modal } from '@arco-design/web-vue';
   import PageContainer from '@/components/page-container/index.vue';
   import useState from '@/hooks/useState';
-  import useTimeFormat from '@/hooks/useTimeFormat';
   import SearchForm from './components/search-form.vue';
   import OperatorButton from './components/operator-button.vue';
   import MutationDrawer from './components/mutation-drawer.vue';
@@ -16,6 +15,7 @@
   import { QueryStatusCode } from '@/global/constants';
   import OrganizationTree from './components/organization-tree.vue';
   import { useDictionaryStore } from '@/store';
+  import AssignRoleDrawer from './components/assign-role-drawer.vue';
 
   const { state: formParams, setState: setFormParams } = useState<
     Partial<StaffParams>
@@ -24,6 +24,7 @@
     Partial<StaffRecord>
   >({});
   const mutationRef = ref();
+  const roleDrawerRef = ref();
   // 请求分页
   const {
     data: tableData,
@@ -89,6 +90,11 @@
     setFormParams({ organization_id: organization_id });
   };
 
+  const onAssignRole = (record: Partial<StaffRecord>) => {
+    setCurrentRecord(record);
+    roleDrawerRef.value?.openDrawer();
+  };
+
   const { selectOptions } = useDictionaryStore();
   const genderTags = selectOptions(QueryStatusCode.staff_gender);
   const systemStatusTags = selectOptions(QueryStatusCode.system_status);
@@ -97,12 +103,12 @@
 <template>
   <PageContainer>
     <a-row :gutter="16">
-      <a-col :span="6">
+      <a-col :span="4">
         <a-card :bordered="false">
           <OrganizationTree @onSelect="onSelectOrganizaiton" />
         </a-card>
       </a-col>
-      <a-col :span="18">
+      <a-col :span="20">
         <a-card :bordered="false">
           <SearchForm @onSearch="onSearch" />
           <OperatorButton @onCreate="onCreate" />
@@ -131,7 +137,7 @@
             <template #operations="{ record }">
               <a-space :size="0">
                 <a-button type="text" size="small" @click="onModify(record)">
-                  <template #default>修改</template>
+                  <template #icon><icon-edit /></template>
                 </a-button>
                 <a-button
                   type="text"
@@ -139,8 +145,16 @@
                   status="danger"
                   @click="onDelete(record)"
                 >
-                  <template #default>删除</template>
+                  <template #icon><icon-delete /></template>
                 </a-button>
+                <a-dropdown trigger="hover">
+                  <a-button type="text" size="small"><icon-down /></a-button>
+                  <template #content>
+                    <a-doption @click="onAssignRole(record)">
+                      <template #default>分配角色</template>
+                    </a-doption>
+                  </template>
+                </a-dropdown>
               </a-space>
             </template>
           </a-table>
@@ -152,6 +166,7 @@
       :record="currentRecord"
       @onMutations="reloadQuery"
     />
+    <AssignRoleDrawer ref="roleDrawerRef" :record="currentRecord" />
   </PageContainer>
 </template>
 

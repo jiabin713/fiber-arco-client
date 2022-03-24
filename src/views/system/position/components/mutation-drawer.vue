@@ -89,10 +89,10 @@
   >
     <a-card :bordered="false">
       <a-form ref="formRef" :model="formModel" layout="vertical" :rules="Rules">
-        <a-form-item label="职位名称" field="name">
+        <a-form-item label="岗位名称" field="name">
           <a-input v-model="formModel.name" placeholder="请输入名称" />
         </a-form-item>
-        <a-form-item label="职位编码" field="code">
+        <a-form-item label="岗位编码" field="code">
           <a-input v-model="formModel.code" placeholder="请输入编码" />
         </a-form-item>
         <a-form-item label="状态" field="status">

@@ -10,7 +10,6 @@ import { buildTree } from '@/utils/buildTree';
   import { OrganizationRecord, OrganizationRequest } from '../data.d';
   import * as OrganizationService from '../service';
   import { QueryStatusCode } from '@/global/constants';
-  import { buildTree } from '@/utils/buildTree';
 
   // Props
   const props = defineProps<{

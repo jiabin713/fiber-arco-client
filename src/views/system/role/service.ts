@@ -17,6 +17,10 @@ export const query = async (
   });
 };
 
+export const queryAll = async (): Promise<RoleRecord[]> => {
+  return request.get(`${URL}/all`);
+};
+
 export const create = async (data: Partial<RoleRequest>) => {
   return request.post(URL, data);
 };

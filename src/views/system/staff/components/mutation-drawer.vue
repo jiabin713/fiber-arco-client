@@ -9,11 +9,13 @@
   import { StaffRecord, StaffRequest } from '../data.d';
   import useState from '@/hooks/useState';
   import * as StaffService from '../service';
-
+  import * as OrganizationService from '@/views/system/organization/service';
+  import * as PositionService from '@/views/system/position/service';
   // Props
   const props = defineProps<{
     record: Partial<StaffRecord>;
   }>();
+
   // Emit
   const emit = defineEmits<{
     (e: 'onMutations'): void;
@@ -29,6 +31,18 @@
   const openDrawer = () => setVisible(true);
   const closeDrawer = () => setVisible(false);
 
+  const { data: organizationData, loading: organizationLoading } = useRequest(
+    () => OrganizationService.queryTree({}),
+    {
+      ready: visible,
+    }
+  );
+  const { data: positionData, loading: positionLoading } = useRequest(
+    () => PositionService.queryAll(),
+    {
+      ready: visible,
+    }
+  );
   // 开启后
   const afterOpen = () => {
     setFormModel(props.record);
@@ -129,30 +143,32 @@
         </a-row>
         <a-divider orientation="left">员工信息</a-divider>
         <a-row>
-          <a-form-item label="组织" field="organization_id">
-            <a-input-number
-              v-model="formModel.sort"
-              placeholder="请输入排序数值"
+          <a-form-item label="归属部门" field="organization_id">
+            <a-tree-select
+              v-model="formModel.organization_id"
+              placeholder="请选择归属部门"
+              :data="organizationData"
+              :loading="organizationLoading"
+              :fieldNames="{
+                key: 'id',
+                value: 'id',
+                title: 'name',
+              }"
             />
           </a-form-item>
-        </a-row>
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="职位" field="position_id">
-              <a-input-number
-                v-model="formModel.sort"
-                placeholder="请输入排序数值"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="角色" field="role_id">
-              <a-input-number
-                v-model="formModel.sort"
-                placeholder="请输入排序数值"
-              />
-            </a-form-item>
-          </a-col>
+          <a-form-item label="岗位" field="position_id">
+            <a-select
+              v-model="formModel.position_id"
+              placeholder="请选择岗位"
+              allow-clear
+              allow-search
+              :loading="positionLoading"
+            >
+              <a-option v-for="item of positionData" :value="item.id">
+                {{ item.name }}
+              </a-option>
+            </a-select>
+          </a-form-item>
         </a-row>
         <a-row>
           <a-form-item label="排序" field="sort" initialValue="{1000}">

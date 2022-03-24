@@ -20,12 +20,15 @@ const Rules: Record<string, FieldRule | FieldRule[]> = {
     { required: true, message: '手机号码为必填项' },
     { length: 11, message: '手机号码最多只能11个字符' },
   ],
-  gender: [{ required: true, message: '状态为必选项' }],
+  gender: [{ required: true, message: '性别为必选项' }],
   status: [{ required: true, message: '状态为必选项' }],
   sort: [
     { required: true, message: '排序为必填项' },
     { positive: true, message: '排序为正整数' },
   ],
+  organization_id: [{ required: true, message: '归属部门为必选项' }],
+  position_id: [{ required: true, message: '岗位为必选项' }],
+  role_ids: [{ required: true, message: '角色为必选项' }],
 };
 
 export default Rules;

@@ -19,7 +19,7 @@
 <script lang="ts" setup>
   import { useRequest } from 'vue-request';
   import * as OrganizationService from '@/views/system/organization/service';
-  import { computed, ref } from 'vue';
+  import { computed, provide, ref } from 'vue';
   import { OrganizationRecord } from '@/views/system/organization/data';
 
   const emit = defineEmits<{
@@ -27,10 +27,10 @@
   }>();
 
   const onSelect = (
-    selectedKeys: string[],
-    event: {
-      selected?: boolean;
-    }
+    selectedKeys: string[]
+    // event: {
+    //   selected?: boolean;
+    // }
   ) => emit('onSelect', selectedKeys[0]);
 
   const searchKey = ref('');

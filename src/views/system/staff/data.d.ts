@@ -6,6 +6,7 @@ export interface StaffRecord {
   mobile: string;
   avatar: string;
   gender: string;
+  role_ids: string[];
   organization_id: string;
   position_id: string;
   status: string;
@@ -38,6 +39,7 @@ export interface StaffRequest {
   mobile: string;
   avatar: string;
   gender: string;
+  role_ids: string[];
   organization_id: string;
   position_id: string;
   status: string;

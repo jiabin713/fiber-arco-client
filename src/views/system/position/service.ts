@@ -17,6 +17,10 @@ export const query = async (
   });
 };
 
+export const queryAll = async (): Promise<PositionRecord[]> => {
+  return request.get(`${URL}/all`);
+};
+
 export const create = async (data: Partial<PositionRequest>) => {
   return request.post(URL, data);
 };
